@@ -1,0 +1,31 @@
+# Etapa 1: Construir la aplicación
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
+WORKDIR /app
+
+# Copia el archivo POM y descarga las dependencias
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copiar el código fuente
+COPY src ./src
+
+# Construir la aplicación
+RUN mvn package -DskipTests
+
+# Etapa 2: Crear la imagen final
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Copiar el archivo JAR desde la etapa de compilación
+COPY --from=build /app/target/*.jar app.jar
+
+# Variables de entorno (estas deben configurarse en el entorno o en un archivo .env)
+ENV SERVER_PORT=4001
+ENV SPRING_DATA_MONGODB_DATABASE=auth-db
+# No incluir credenciales sensibles aquí
+
+# Exponer el puerto
+EXPOSE 4001
+
+# Ejecutar la aplicación
+ENTRYPOINT ["java", "-jar", "app.jar"]

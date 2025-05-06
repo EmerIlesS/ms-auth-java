@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:4001}
+
+spring:
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI}
+      database: ${SPRING_DATA_MONGODB_DATABASE:auth-db}
+  graphql:
+    graphiql:
+      enabled: ${SPRING_GRAPHQL_GRAPHIQL_ENABLED:true}
+    path: ${SPRING_GRAPHQL_PATH:/graphql}
+    schema:
+      printer:
+        enabled: ${SPRING_GRAPHQL_SCHEMA_PRINTER_ENABLED:true}
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-here-make-it-long-and-secure}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hora en milisegundos
+
+logging:
+  level:
+    org.springframework.data.mongodb: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_DATA_MONGODB:DEBUG}
+    org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:DEBUG}
+    com.auth: ${LOGGING_LEVEL_COM_AUTH:DEBUG}

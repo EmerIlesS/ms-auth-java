@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: ms-auth-java
+    runtime: docker
+    plan: starter
+    region: ohio
+    branch: main
+    envVars:
+      - key: SERVER_PORT
+        value: 4001
+      - key: SPRING_DATA_MONGODB_DATABASE
+        value: auth-db
+      - key: JWT_EXPIRATION
+        value: 86400000
+      - key: JWT_SECRET
+        sync: false
+      - key: SPRING_DATA_MONGODB_URI
+        sync: false
+    healthCheckPath: /actuator/health
+    buildCommand: ./mvnw package -DskipTests
+    startCommand: java -jar target/*.jar

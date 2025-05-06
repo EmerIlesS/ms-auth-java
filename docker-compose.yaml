@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  ms-auth-java:
+    build: .
+    container_name: ms-auth-java
+    restart: always
+    ports:
+      - "4001:4001"
+    env_file:
+      - .env
+    networks:
+      - microservices-network
+    # Configuración para healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Puedes añadir un servicio de MongoDB en desarrollo local si lo necesitas
+  # mongodb:
+  #   image: mongo:latest
+  #   container_name: mongodb
+  #   restart: always
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=root
+  #     - MONGO_INITDB_ROOT_PASSWORD=example
+  #   networks:
+  #     - microservices-network
+
+  # Integración con otros microservicios (ms-products-orders)
+  # ms-products-orders:
+  #   image: ms-products-orders:latest
+  #   container_name: ms-products-orders
+  #   restart: always
+  #   ports:
+  #     - "4002:4002"
+  #   env_file:
+  #     - ../ms-products-orders/.env
+  #   networks:
+  #     - microservices-network
+  #   depends_on:
+  #     - ms-auth-java
+
+  # API Gateway
+  # api-gateway:
+  #   image: node:18-alpine
+  #   container_name: api-gateway
+  #   working_dir: /app
+  #   command: npm start
+  #   restart: always
+  #   ports:
+  #     - "4000:4000"
+  #   volumes:
+  #     - ../gateway:/app
+  #   env_file:
+  #     - ../gateway/.env
+  #   environment:
+  #     - AUTH_SERVICE_URL=http://ms-auth-java:4001
+  #     - PRODUCTS_SERVICE_URL=http://ms-products-orders:4002
+  #   networks:
+  #     - microservices-network
+  #   depends_on:
+  #     - ms-auth-java
+  #     - ms-products-orders
+
+# Solo se necesita descomentar si se usa MongoDB local
+# volumes:
+#   mongodb_data:
+
+networks:
+  microservices-network:
+    driver: bridge
