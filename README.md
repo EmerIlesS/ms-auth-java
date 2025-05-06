@@ -74,7 +74,52 @@ La API GraphQL está disponible en `/graphql` y GraphiQL (interfaz de consulta) 
 
 ## Integración con API Gateway
 
-Este microservicio está diseñado para funcionar con un API Gateway, que enruta las solicitudes apropiadas a este servicio en función de las rutas configuradas.
+Este microservicio está diseñado para funcionar con un API Gateway, que enruta las solicitudes apropiadas a este servicio en función de las rutas configuradas. La integración con la API Gateway incluye los siguientes aspectos:
+
+### Federación de Esquemas GraphQL
+
+- El esquema GraphQL de este microservicio se federa con otros esquemas a través de la API Gateway.
+- La API Gateway combina los esquemas de todos los microservicios para proporcionar un único punto de entrada para las consultas GraphQL.
+- Los clientes pueden realizar consultas que abarcan múltiples microservicios a través de la API Gateway.
+
+### Flujo de Autenticación
+
+1. El cliente envía credenciales de inicio de sesión a la API Gateway.
+2. La API Gateway redirige la solicitud a este microservicio.
+3. Este microservicio valida las credenciales y genera un token JWT.
+4. El token JWT se devuelve al cliente a través de la API Gateway.
+5. Para solicitudes posteriores, el cliente incluye el token JWT en el encabezado `Authorization`.
+6. La API Gateway valida inicialmente el token y lo pasa a los microservicios correspondientes.
+
+### Compartición de Tokens JWT
+
+- Los tokens JWT generados por este microservicio son utilizados por todos los demás microservicios.
+- La API Gateway pasa el token JWT en el encabezado de las solicitudes a los microservicios.
+- Cada microservicio valida el token JWT utilizando la misma clave secreta configurada en las variables de entorno.
+
+## Integración con ms-products-orders
+
+Este microservicio se integra con el microservicio de productos y órdenes (ms-products-orders) para proporcionar autenticación y autorización. A continuación se detalla cómo funciona esta integración:
+
+### Validación de Tokens JWT
+
+- El microservicio ms-auth-java genera tokens JWT cuando los usuarios inician sesión.
+- El microservicio ms-products-orders recibe estos tokens a través de la API Gateway en el encabezado `Authorization`.
+- ms-products-orders valida el token utilizando la misma clave secreta configurada en ambos microservicios.
+- Si el token es válido, ms-products-orders extrae la información del usuario y sus roles para autorizar las operaciones.
+
+### Control de Acceso Basado en Roles
+
+- Los roles de usuario (CUSTOMER, SELLER, ADMIN) definidos en ms-auth-java determinan los permisos en ms-products-orders:
+  - **CUSTOMER**: Puede ver productos y categorías, y crear órdenes.
+  - **SELLER**: Puede gestionar sus propios productos.
+  - **ADMIN**: Tiene acceso completo a todas las funcionalidades.
+
+### Gestión de Productos Favoritos
+
+- ms-auth-java mantiene una lista de productos favoritos para cada usuario.
+- Cuando un usuario marca un producto como favorito en ms-products-orders, se envía una solicitud a ms-auth-java para actualizar la lista de favoritos.
+- ms-auth-java proporciona endpoints para añadir, eliminar y listar productos favoritos.
 
 ## Roles de Usuario
 
