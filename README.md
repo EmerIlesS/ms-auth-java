@@ -2,13 +2,26 @@
 
 Este microservicio forma parte de una arquitectura de microservicios y proporciona funcionalidades de autenticación y gestión de usuarios utilizando Spring Boot, JWT y MongoDB.
 
-## Características
+## Características Implementadas
 
-- Registro de usuarios
-- Inicio de sesión con autenticación JWT
-- Gestión de roles (CUSTOMER, SELLER, ADMIN)
-- Gestión de productos favoritos
-- API GraphQL
+- **Registro de usuarios**: Soporte para registro de diferentes tipos de usuarios (CUSTOMER, SELLER, ADMIN) con validación de datos
+- **Inicio de sesión**: Autenticación segura con generación de tokens JWT
+- **Gestión de perfiles**: Consulta de información de perfil de usuario autenticado
+- **Gestión de roles**: Implementación de tres roles distintos con diferentes niveles de acceso
+- **Gestión de productos favoritos**: Funcionalidad para añadir, eliminar y listar productos favoritos
+- **API GraphQL**: Implementación completa con queries y mutations para todas las funcionalidades
+- **Integración con otros microservicios**: Comunicación con ms-products-orders para validación de productos
+
+## Tecnologías Utilizadas
+
+- **Spring Boot 3.2.2**: Framework principal para el desarrollo del microservicio
+- **Spring Security**: Implementación de seguridad y autenticación
+- **JWT (JSON Web Tokens)**: Para la generación y validación de tokens de autenticación
+- **MongoDB**: Base de datos NoSQL para almacenamiento de usuarios y sus datos
+- **GraphQL**: API declarativa para consultas y mutaciones
+- **WebFlux**: Para comunicación reactiva con otros microservicios
+- **Lombok**: Reducción de código boilerplate
+- **Spring Dotenv**: Gestión de variables de entorno
 
 ## Requisitos previos
 
@@ -29,6 +42,7 @@ SPRING_DATA_MONGODB_URI=mongodb+srv://username:password@host/database
 SPRING_DATA_MONGODB_DATABASE=auth-db
 JWT_SECRET=your-secret-key
 JWT_EXPIRATION=86400000
+PRODUCTS_SERVICE_URL=http://localhost:4002
 ```
 
 ## Ejecución local
@@ -58,19 +72,47 @@ docker run -p 4001:4001 --env-file .env ms-auth-java:latest
 docker-compose up -d
 ```
 
-## Endpoints principales
+## Endpoints implementados
 
 ### REST API
 
-- POST `/api/auth/register` - Registro de usuarios
-- POST `/api/auth/login` - Inicio de sesión
-- POST `/api/auth/favorites/{id}` - Añadir producto a favoritos
-- DELETE `/api/auth/favorites/{id}` - Eliminar producto de favoritos
-- GET `/api/auth/favorites` - Listar productos favoritos
+- **POST `/api/auth/register`**: Registro de usuarios con rol CUSTOMER
+- **POST `/api/auth/register/vendor`**: Registro de usuarios con rol SELLER
+- **POST `/api/auth/register/admin`**: Registro de usuarios con rol ADMIN
+- **POST `/api/auth/login`**: Inicio de sesión y generación de token JWT
+- **GET `/api/auth/me`**: Obtener información del perfil del usuario autenticado
+- **POST `/api/auth/favorites/{id}`**: Añadir producto a favoritos
+- **DELETE `/api/auth/favorites/{id}`**: Eliminar producto de favoritos
+- **GET `/api/auth/favorites`**: Listar productos favoritos del usuario
 
 ### GraphQL
 
 La API GraphQL está disponible en `/graphql` y GraphiQL (interfaz de consulta) en `/graphiql`.
+
+#### Queries
+
+- **me**: Obtener información del perfil del usuario autenticado
+
+#### Mutations
+
+- **register**: Registro de usuarios con rol CUSTOMER
+- **registerVendor**: Registro de usuarios con rol SELLER
+- **registerAdmin**: Registro de usuarios con rol ADMIN
+- **login**: Inicio de sesión y generación de token JWT
+- **addToFavorites**: Añadir producto a favoritos
+- **removeFromFavorites**: Eliminar producto de favoritos
+
+## Modelo de datos
+
+### Usuario (User)
+
+- **id**: Identificador único del usuario
+- **email**: Correo electrónico (único, usado para autenticación)
+- **password**: Contraseña encriptada
+- **firstName**: Nombre del usuario
+- **lastName**: Apellido del usuario
+- **role**: Rol del usuario (CUSTOMER, SELLER, ADMIN)
+- **favorites**: Lista de IDs de productos favoritos
 
 ## Integración con API Gateway
 
@@ -120,12 +162,22 @@ Este microservicio se integra con el microservicio de productos y órdenes (ms-p
 - ms-auth-java mantiene una lista de productos favoritos para cada usuario.
 - Cuando un usuario marca un producto como favorito en ms-products-orders, se envía una solicitud a ms-auth-java para actualizar la lista de favoritos.
 - ms-auth-java proporciona endpoints para añadir, eliminar y listar productos favoritos.
+- Antes de añadir un producto a favoritos, se verifica su existencia mediante una llamada al servicio ms-products-orders.
 
 ## Roles de Usuario
 
-- **CUSTOMER**: Usuarios que pueden navegar y comprar productos
-- **SELLER**: Usuarios que pueden gestionar sus propios productos
-- **ADMIN**: Usuarios con acceso completo a todas las funcionalidades
+- **CUSTOMER**: Usuarios que pueden navegar y comprar productos, gestionar su perfil y sus productos favoritos
+- **SELLER**: Usuarios que pueden gestionar sus propios productos, además de todas las funcionalidades de CUSTOMER
+- **ADMIN**: Usuarios con acceso completo a todas las funcionalidades del sistema
+
+## Validaciones de seguridad implementadas
+
+- Encriptación de contraseñas mediante BCrypt
+- Validación de tokens JWT en cada solicitud
+- Verificación de roles para acceso a endpoints protegidos
+- Validación de datos de entrada en registro y login
+- Verificación de unicidad de email en el registro
+- Verificación de existencia de productos antes de añadirlos a favoritos
 
 ## Estructura del proyecto
 
@@ -136,20 +188,20 @@ ms-auth-java/
 │   │   ├── java/
 │   │   │   └── com/
 │   │   │       └── auth/
-│   │   │           ├── controller/
-│   │   │           ├── model/
-│   │   │           ├── repository/
-│   │   │           ├── service/
-│   │   │           ├── security/
-│   │   │           └── config/
+│   │   │           ├── controller/      # Controladores REST y GraphQL
+│   │   │           ├── model/           # Entidades y DTOs
+│   │   │           ├── repository/      # Repositorios MongoDB
+│   │   │           ├── service/         # Servicios de negocio
+│   │   │           ├── security/        # Configuración de seguridad y JWT
+│   │   │           └── config/          # Configuraciones generales
 │   │   └── resources/
-│   │       ├── application.yml
-│   │       └── graphql/
-│   └── test/
-├── .env.example
+│   │       ├── application.yml          # Configuración de la aplicación
+│   │       └── graphql/                 # Esquemas GraphQL
+│   └── test/                            # Pruebas unitarias e integración
+├── .env.example                         # Ejemplo de variables de entorno
 ├── .gitignore
 ├── docker-compose.yaml
 ├── Dockerfile
-├── pom.xml
+├── pom.xml                              # Dependencias Maven
 └── README.md
 ```
