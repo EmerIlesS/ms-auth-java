@@ -16,6 +16,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ProductService productService;
 
     public AuthPayload register(RegisterInput input, String role) {
         System.out.println("Registering user: " + input + " with role: " + role);
@@ -64,6 +65,16 @@ public class AuthService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
+        // Validar que el usuario tenga rol de CUSTOMER
+        if (!"CUSTOMER".equals(user.getRole())) {
+            throw new RuntimeException("Solo los clientes pueden modificar su lista de favoritos");
+        }
+        
+        // Validar que el producto exista antes de agregarlo
+        if (!productService.productExists(productId)) {
+            throw new RuntimeException("El producto no existe");
+        }
+        
         if (!user.getFavorites().contains(productId)) {
             user.getFavorites().add(productId);
             return userRepository.save(user);
@@ -74,6 +85,11 @@ public class AuthService {
     public User removeFromFavorites(String userId, String productId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Validar que el usuario tenga rol de CUSTOMER
+        if (!"CUSTOMER".equals(user.getRole())) {
+            throw new RuntimeException("Solo los clientes pueden modificar su lista de favoritos");
+        }
         
         user.getFavorites().remove(productId);
         return userRepository.save(user);

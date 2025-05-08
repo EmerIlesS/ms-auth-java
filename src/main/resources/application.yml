@@ -23,3 +23,8 @@ logging:
     org.springframework.data.mongodb: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_DATA_MONGODB:DEBUG}
     org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:DEBUG}
     com.auth: ${LOGGING_LEVEL_COM_AUTH:DEBUG}
+
+# Configuración del servicio de productos
+products:
+  service:
+    url: ${PRODUCTS_SERVICE_URL:http://localhost:4002}
