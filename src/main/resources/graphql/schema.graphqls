@@ -24,8 +24,17 @@ input LoginInput {
     password: String!
 }
 
+type UserProfile {
+    id: ID!
+    email: String!
+    firstName: String!
+    lastName: String!
+    role: String!
+    favorites: [ID!]!
+}
+
 type Query {
-    me: User
+    me: UserProfile
 }
 
 type Mutation {
