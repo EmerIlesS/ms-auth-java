@@ -17,10 +17,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public AuthPayload register(RegisterInput input) {
-        System.out.println("Registering user: " + input);
+    public AuthPayload register(RegisterInput input, String role) {
+        System.out.println("Registering user: " + input + " with role: " + role);
         if (userRepository.findByEmail(input.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
+        }
+        
+        // Validar que la contraseña sea segura (al menos 8 caracteres, con números y letras)
+        if (input.getPassword().length() < 8 || !input.getPassword().matches(".*[0-9].*") || !input.getPassword().matches(".*[a-zA-Z].*")) {
+            throw new RuntimeException("Password must be at least 8 characters long and contain both letters and numbers");
         }
 
         User user = new User();
@@ -28,7 +33,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(input.getPassword()));
         user.setFirstName(input.getFirstName());
         user.setLastName(input.getLastName());
-        user.setRole("CUSTOMER");
+        user.setRole(role);
 
         user = userRepository.save(user);
         String token = jwtTokenProvider.createToken(user.getEmail(), user.getRole());

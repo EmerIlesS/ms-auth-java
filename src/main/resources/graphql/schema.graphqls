@@ -30,6 +30,8 @@ type Query {
 
 type Mutation {
     register(input: RegisterInput!): AuthPayload!
+    registerVendor(input: RegisterInput!): AuthPayload!
+    registerAdmin(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
     addToFavorites(productId: ID!): User!
     removeFromFavorites(productId: ID!): User!

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
@@ -24,7 +25,19 @@ public class AuthController {
 
     @MutationMapping
     public AuthPayload register(@Argument RegisterInput input) {
-        return authService.register(input);
+        return authService.register(input, "CUSTOMER");
+    }
+    
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public AuthPayload registerVendor(@Argument RegisterInput input) {
+        return authService.register(input, "SELLER");
+    }
+    
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public AuthPayload registerAdmin(@Argument RegisterInput input) {
+        return authService.register(input, "ADMIN");
     }
 
     @MutationMapping
