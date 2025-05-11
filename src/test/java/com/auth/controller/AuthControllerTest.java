@@ -3,11 +3,13 @@ package com.auth.controller;
 import com.auth.model.User;
 import com.auth.model.dto.AuthPayload;
 import com.auth.model.dto.RegisterInput;
+import com.auth.security.RoleAuthorizationHandler;
 import com.auth.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 class AuthControllerTest {
@@ -78,23 +81,28 @@ class AuthControllerTest {
         expectedPayload.setToken("jwt-token");
         expectedPayload.setUser(user);
 
-        // Simular que el usuario autenticado tiene rol ADMIN
-        Authentication authentication = mock(Authentication.class);
+        // Crear un usuario admin para simular autenticación
         User adminUser = new User();
+        adminUser.setId("admin-id");
+        adminUser.setEmail("admin@example.com");
         adminUser.setRole("ADMIN");
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        when(authService.register(any(RegisterInput.class), eq("SELLER"))).thenReturn(expectedPayload);
+        // Usar MockedStatic para simular el método estático checkAdmin en RoleAuthorizationHandler
+        try (MockedStatic<RoleAuthorizationHandler> mockedStatic = mockStatic(RoleAuthorizationHandler.class)) {
+            // El método checkAdmin debe devolver el usuario admin
+            mockedStatic.when(RoleAuthorizationHandler::checkAdmin).thenReturn(adminUser);
 
-        // Act
-        AuthPayload result = authController.registerVendor(input);
+            when(authService.register(any(RegisterInput.class), eq("SELLER"))).thenReturn(expectedPayload);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(expectedPayload.getToken(), result.getToken());
-        assertEquals(expectedPayload.getUser().getEmail(), result.getUser().getEmail());
-        assertEquals("SELLER", result.getUser().getRole());
+            // Act
+            AuthPayload result = authController.registerVendor(input);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(expectedPayload.getToken(), result.getToken());
+            assertEquals(expectedPayload.getUser().getEmail(), result.getUser().getEmail());
+            assertEquals("SELLER", result.getUser().getRole());
+        }
     }
 
     @Test
@@ -114,22 +122,27 @@ class AuthControllerTest {
         expectedPayload.setToken("jwt-token");
         expectedPayload.setUser(user);
 
-        // Simular que el usuario autenticado tiene rol ADMIN
-        Authentication authentication = mock(Authentication.class);
+        // Crear un usuario admin para simular autenticación
         User adminUser = new User();
+        adminUser.setId("admin-id");
+        adminUser.setEmail("existing-admin@example.com");
         adminUser.setRole("ADMIN");
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        when(authService.register(any(RegisterInput.class), eq("ADMIN"))).thenReturn(expectedPayload);
+        // Usar MockedStatic para simular el método estático checkAdmin en RoleAuthorizationHandler
+        try (MockedStatic<RoleAuthorizationHandler> mockedStatic = mockStatic(RoleAuthorizationHandler.class)) {
+            // El método checkAdmin debe devolver el usuario admin
+            mockedStatic.when(RoleAuthorizationHandler::checkAdmin).thenReturn(adminUser);
 
-        // Act
-        AuthPayload result = authController.registerAdmin(input);
+            when(authService.register(any(RegisterInput.class), eq("ADMIN"))).thenReturn(expectedPayload);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(expectedPayload.getToken(), result.getToken());
-        assertEquals(expectedPayload.getUser().getEmail(), result.getUser().getEmail());
-        assertEquals("ADMIN", result.getUser().getRole());
+            // Act
+            AuthPayload result = authController.registerAdmin(input);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(expectedPayload.getToken(), result.getToken());
+            assertEquals(expectedPayload.getUser().getEmail(), result.getUser().getEmail());
+            assertEquals("ADMIN", result.getUser().getRole());
+        }
     }
 }

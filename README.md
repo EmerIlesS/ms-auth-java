@@ -124,6 +124,25 @@ Este microservicio está diseñado para funcionar con un API Gateway, que enruta
 - La API Gateway combina los esquemas de todos los microservicios para proporcionar un único punto de entrada para las consultas GraphQL.
 - Los clientes pueden realizar consultas que abarcan múltiples microservicios a través de la API Gateway.
 
+### Configuración para la Federación
+
+Para habilitar la federación con el API Gateway, este microservicio:
+
+1. Expone su esquema GraphQL en el endpoint `/graphql`
+2. Utiliza Spring GraphQL para manejar las consultas y mutaciones
+3. Configura correctamente los tipos de datos para ser compatibles con la federación
+
+### Autenticación y Autorización
+
+- Este microservicio genera tokens JWT que son utilizados por el API Gateway para autenticar solicitudes a otros servicios.
+- Los tokens contienen información sobre el usuario, incluyendo su ID, email y rol.
+- El API Gateway pasa estos tokens a los demás microservicios para validar permisos.
+
+### Comunicación con otros Microservicios
+
+- Este microservicio puede comunicarse con el microservicio de productos y órdenes para gestionar los productos favoritos de los usuarios.
+- La comunicación se realiza a través del API Gateway, utilizando el esquema federado.
+
 ### Flujo de Autenticación
 
 1. El cliente envía credenciales de inicio de sesión a la API Gateway.

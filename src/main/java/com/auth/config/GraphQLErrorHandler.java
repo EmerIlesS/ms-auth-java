@@ -4,11 +4,11 @@ import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.schema.DataFetchingEnvironment;
 import org.springframework.graphql.execution.DataFetcherExceptionResolver;
-import org.springframework.graphql.execution.ErrorType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class GraphQLErrorHandler implements DataFetcherExceptionResolver {
 
     @Override
-    public List<GraphQLError> resolveException(Throwable exception, DataFetchingEnvironment environment) {
+    public Mono<List<GraphQLError>> resolveException(Throwable exception, DataFetchingEnvironment environment) {
         String message;
         String errorCode;
         
@@ -65,13 +65,13 @@ public class GraphQLErrorHandler implements DataFetcherExceptionResolver {
             exception.printStackTrace();
         }
         
-        return Collections.singletonList(
-            GraphqlErrorBuilder.newError()
+        GraphQLError error = GraphqlErrorBuilder.newError()
                 .message(message)
                 .path(environment.getExecutionStepInfo().getPath())
                 .location(environment.getField().getSourceLocation())
                 .extensions(Map.of("code", errorCode))
-                .build()
-        );
+                .build();
+                
+        return Mono.just(Collections.singletonList(error));
     }
 }
