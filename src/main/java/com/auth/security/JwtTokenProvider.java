@@ -9,12 +9,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -31,7 +35,10 @@ public class JwtTokenProvider {
 
     @PostConstruct
     protected void init() {
+        logger.debug("Initializing JWT with secret: {}", jwtSecret);
+        logger.debug("JWT secret length: {}", jwtSecret.length());
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        logger.debug("JWT key initialized successfully");
     }
 
     public String createToken(String username, String role) {

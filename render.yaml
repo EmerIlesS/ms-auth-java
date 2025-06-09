@@ -1,10 +1,11 @@
 services:
   - type: web
     name: ms-auth-java
-    runtime: docker
+    repo: https://github.com/EmerIlesS/ms-auth-java.git
     plan: starter
     region: ohio
     branch: main
+    env: java
     envVars:
       - key: SERVER_PORT
         value: 4001

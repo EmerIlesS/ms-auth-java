@@ -15,6 +15,55 @@ public class UserProfileDTO {
     private String role;
     private List<String> favorites = new ArrayList<>();
     
+    // Getters y setters explícitos
+    public String getId() {
+        return id;
+    }
+    
+    public void setId(String id) {
+        this.id = id;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getFirstName() {
+        return firstName;
+    }
+    
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+    
+    public String getLastName() {
+        return lastName;
+    }
+    
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+    
+    public String getRole() {
+        return role;
+    }
+    
+    public void setRole(String role) {
+        this.role = role;
+    }
+    
+    public List<String> getFavorites() {
+        return favorites;
+    }
+    
+    public void setFavorites(List<String> favorites) {
+        this.favorites = favorites;
+    }
+    
     public static UserProfileDTO fromUser(User user) {
         UserProfileDTO dto = new UserProfileDTO();
         dto.setId(user.getId());

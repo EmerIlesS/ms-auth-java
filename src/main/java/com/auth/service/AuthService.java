@@ -63,35 +63,68 @@ public class AuthService {
 
     public User addToFavorites(String userId, String productId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
         // Validar que el usuario tenga rol de CUSTOMER
         if (!"CUSTOMER".equals(user.getRole())) {
             throw new RuntimeException("Solo los clientes pueden modificar su lista de favoritos");
         }
         
-        // Validar que el producto exista antes de agregarlo
-        if (!productService.productExists(productId)) {
-            throw new RuntimeException("El producto no existe");
+        try {
+            // Intentar validar que el producto exista utilizando el circuit breaker
+            boolean exists = productService.productExists(productId);
+            if (!exists) {
+                System.out.println("Advertencia: El producto " + productId + " no se encontró, pero se agregará a favoritos de todas formas.");
+            }
+        } catch (Exception ex) {
+            // Registrar el error pero continuar con la operación
+            System.err.println("Error al verificar existencia del producto: " + ex.getMessage());
+            // Registramos que el circuito podría estar abierto
+            System.err.println("La operación continuará, pero se recomienda verificar la disponibilidad del servicio de productos");
         }
         
+        // Verificar duplicados antes de agregar
         if (!user.getFavorites().contains(productId)) {
+            // Evitamos modificar directamente la lista por si es inmutable o nula
+            if (user.getFavorites() == null) {
+                user.setFavorites(new java.util.ArrayList<>());
+            }
             user.getFavorites().add(productId);
-            return userRepository.save(user);
+            
+            try {
+                return userRepository.save(user);
+            } catch (Exception ex) {
+                System.err.println("Error al guardar usuario con favorito: " + ex.getMessage());
+                throw new RuntimeException("No se pudo guardar el producto en favoritos. Intente nuevamente más tarde.");
+            }
         }
         return user;
     }
 
     public User removeFromFavorites(String userId, String productId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
         // Validar que el usuario tenga rol de CUSTOMER
         if (!"CUSTOMER".equals(user.getRole())) {
             throw new RuntimeException("Solo los clientes pueden modificar su lista de favoritos");
         }
         
-        user.getFavorites().remove(productId);
-        return userRepository.save(user);
+        if (user.getFavorites() == null) {
+            return user; // Si la lista es nula, no hay nada que eliminar
+        }
+        
+        // Eliminar el producto de la lista de favoritos
+        boolean removed = user.getFavorites().remove(productId);
+        
+        if (removed) {
+            try {
+                return userRepository.save(user);
+            } catch (Exception ex) {
+                System.err.println("Error al guardar usuario después de eliminar favorito: " + ex.getMessage());
+                throw new RuntimeException("No se pudo eliminar el producto de favoritos. Intente nuevamente más tarde.");
+            }
+        }
+        return user; // Si no se eliminó nada, devolver el usuario sin cambios
     }
 }

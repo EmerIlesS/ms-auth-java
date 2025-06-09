@@ -28,3 +28,40 @@ logging:
 products:
   service:
     url: ${PRODUCTS_SERVICE_URL:http://localhost:4002}
+    timeout: ${PRODUCTS_SERVICE_TIMEOUT:5000}
+    retry:
+      max-attempts: ${PRODUCTS_SERVICE_RETRY_MAX_ATTEMPTS:3}
+      delay: ${PRODUCTS_SERVICE_RETRY_DELAY:1000}
+
+# Configuraciones de resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      productService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30000
+        permittedNumberOfCallsInHalfOpenState: 2
+  retry:
+    instances:
+      productService:
+        maxRetryAttempts: 3
+        waitDuration: 1000
+
+# Configuración de Actuator para monitoreo
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
